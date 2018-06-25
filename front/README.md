@@ -1,6 +1,6 @@
 # newfapl
 
-> Site about English Football eageue
+> Site about English Football League
 
 ## Build Setup
 
