@@ -14,12 +14,6 @@ export default {
     // We can return a Promise instead of calling the callback
     let { data } = await app.$axios.get('/articles/getpinned');
     return store.dispatch('pinnedArticle', data)
-  },
-
-  computed: {
-    dataa() {
-      return this.$store.getters.getPinnedArticle
-    }
   }
 }
 </script>

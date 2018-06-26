@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Article;
+use App\Http\Controllers\Models\Articles;
 use App\Helpers\Api;
 use Illuminate\Http\Request;
-use App\Api\Articles\Articles;
 
 
 class ApiController extends Controller
@@ -13,7 +12,7 @@ class ApiController extends Controller
     /*
     |--------------------------------------------------------------------------
     | Api Controller
-    |--------------------------------------------------------------------------
+    |---------------------------------------------------------s-----------------
     |
     | This controller handles all user's API requests
     | The controller uses a trait to conveniently provide its functionality to your applications.

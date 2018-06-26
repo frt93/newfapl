@@ -5,7 +5,7 @@
       <div class="articlehead">
         <h5>
           <div 
-              v-for="category in article.cat" 
+              v-for="category in article.categories" 
               :key="category.id">
               {{ category.name }}
           </div>

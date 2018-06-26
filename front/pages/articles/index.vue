@@ -10,17 +10,11 @@ export default {
     Articles
   },
 
-  // fetch ({ store }) {
-  //   return axios.get('http://fapl.loc/api/articles/getlast')
-  //   .then((res) => {
-  //     this.articles = res.data
-  //     store.dispatch('setArticles', res.data)
-  //   })
-  // },
-
-  async asyncData({ app, params, store }) {
+  async asyncData({ app, params, store, query }) {
     // We can return a Promise instead of calling the callback
-    let { data } = await app.$axios.get('/articles/getlast')
+    let page = ( query.page ) ? '?page='+query.page : '';
+
+    let { data } = await app.$axios.get('/articles/getlast' + page)
     return store.dispatch('setArticles', data)
   }
 }

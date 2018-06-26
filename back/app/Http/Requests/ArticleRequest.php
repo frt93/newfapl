@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\Validator;
 
 class ArticleRequest extends FormRequest
 {
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -27,11 +28,11 @@ class ArticleRequest extends FormRequest
         return [
             'title' => 'required|max:255',
             'excerpt' => 'required',
-//            'body' => 'required',
+            'body' => 'required',
             'published_at' => 'required|date',
             'author' => 'required',
-//            'tag_list' => 'required',
-//            'category_list' => 'required'
+            'tag_list' => 'required',
+            'category_list' => 'required',
         ];
     }
 }

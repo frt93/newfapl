@@ -28,7 +28,7 @@
             return {
                 loading: false,
                 infiniteLoading: true,
-                fetchPath: this.apiPath + '/' + this.model,
+                fetchPath: this.apiPath + '/getlast',
 
                 /**
                  * A flag that indicates the presence or absence of filtering parameters in the URL on which the page is rendered. 

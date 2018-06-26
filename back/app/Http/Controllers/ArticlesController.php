@@ -93,12 +93,11 @@ class ArticlesController extends Controller
 
     public function update(Article $article, ArticleRequest $request)
     {
-        dd($article);
         $article->update($request->all());
         $this->syncArticleData($article, $request);
 
         flash()->success('Ваша статья обновлена');
-        return redirect()->action('ArticlesController@show', [$article->id]);
+//        return redirect()->action('ArticlesController@show', [$article->id]);
     }
 
     /**

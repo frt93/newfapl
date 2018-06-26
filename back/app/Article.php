@@ -2,7 +2,9 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Redis;
 
 
 class Article extends Model
@@ -12,7 +14,8 @@ class Article extends Model
         'excerpt',
         'body',
         'published_at',
-        'author'
+        'author',
+        'pinned'
     ];
 
     protected $dates = ['published_at'];
@@ -77,6 +80,28 @@ class Article extends Model
     public function getPublishedAtAttribute($date)
     {
         return Carbon::parse($date)->toDateTimeString();
+    }
+
+    /**
+     * When updating the article, let's check her pinned status.
+     * If it's pinned - we cache her, then search for the previous pinned article (if it's not she herself)
+     * and deprive her of this status.
+     */
+    public function checkPinnedStatusOnUpdate ()
+    {
+        if ( $this->pinned == 1 ) {
+            Redis::set('pinnedArticle', $this);
+
+            $previousPinnedArticle = Article::where('id', '<>', $this->id)
+                    ->where('pinned', '=', 1)
+                    ->orderBy('id','asc')
+                    ->first()
+                    ;
+
+            if ($previousPinnedArticle) {
+                $previousPinnedArticle->update(['pinned' => 0]);
+            }
+        }
     }
 
 
