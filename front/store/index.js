@@ -12,7 +12,8 @@ const UserData = () => new Vuex.Store({
     articles: [],
     articlesMeta: [],
     pinnedArticle: [],
-    currentArticle: []
+    currentArticle: [],
+    laravelCsrfToken: null
   },
   
   mutations: {
@@ -31,10 +32,19 @@ const UserData = () => new Vuex.Store({
     },
     currentArticle(state, article) {
       state.currentArticle = article
+    },
+    setLaravelCsrfToken (state, token) {
+      state.laravelCsrfToken = token
     }
   },
 
   actions: {
+    nuxtServerInit (VuexContext, context) {
+      return Promise.resolve(context.$axios.get('http://back.loc/gettoken')
+        .then(res => {
+          VuexContext.commit('setLaravelCsrfToken', res.data)
+        }))
+    },
     userLogged(VuexContext, user) {
         VuexContext.commit('userLogged', user)
     },
@@ -64,6 +74,10 @@ const UserData = () => new Vuex.Store({
 
     getCurrentArticle(state) {
       return state.currentArticle
+    },
+
+    getLaravelCsrfToken(state) {
+      return state.laravelCsrfToken
     }
   }
 })

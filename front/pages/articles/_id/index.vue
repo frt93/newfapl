@@ -3,17 +3,18 @@
   <header class="entry-head">
     <div class="container entry-head-content clearfix">
       <div class="articlehead">
+        
         <h5>
           <div 
               v-for="category in article.categories" 
               :key="category.id">
-              {{ category.name }}
+              {{ category }}
           </div>
         </h5>
         <h1>{{ article.title }}</h1>
         <h5>
           {{ article.author }}
-          <span>{{ this.$moment(article.date).fromNow() }}</span>
+          <span>{{ this.$moment(article.published_at).fromNow() }}</span>
         </h5>
         <h5><nuxt-link :to="editLink">Изменить</nuxt-link></h5>
       </div>
@@ -37,8 +38,8 @@
         <li 
             style="float:left; margin-right:15px"
             v-for="tag in article.tags" 
-            :key="tag.id">
-            {{ tag.name }}
+            :key="tag">
+            {{ tag }}
         </li>
       </ul>
       <hr>
@@ -48,7 +49,7 @@
           style="float:left; margin-right:15px"
           v-for="player in article.players" 
           :key="player.id">
-          {{ player.name }}
+          {{ player }}
         </li>
       </ul>
       <hr>
@@ -58,7 +59,17 @@
           style="float:left; margin-right:15px"
           v-for="club in article.clubs" 
           :key="club.id">
-          {{ club.name }}
+          {{ club }}
+        </li>
+      </ul>
+      <hr>
+      <h5>Персонал:</h5>
+      <ul>
+        <li 
+          style="float:left; margin-right:15px"
+          v-for="staff in article.staff" 
+          :key="staff.id">
+          {{ staff }}
         </li>
       </ul>
       <div class="navigation clearfix">
@@ -86,15 +97,17 @@
 import Social from '@/components/articles/social';
 
 export default {
+  validate ({ params }) {
+    // Must be a number
+    return /^\d+$/.test(params.id)
+  },
+
   components: {
     Social
-    },
-  data() {
-    return {}
   },
 
   async asyncData({ app, params }) {
-    let { data } = await app.$axios.get(`/articles/getarticle/${params.id}`)
+    let { data } = await app.$axios.get(`/articles/${params.id}`)
     return { article: data }
   },
 
@@ -103,17 +116,17 @@ export default {
         return `/articles/${this.$route.params.id}/edit`
     },
     prevLink() {
-        return `/articles/${this.article.previous.id}`
+        return `/articles/${this.article.previous}`
     },
     nextLink() {
-        return `/articles/${this.article.next.id}`
+        return `/articles/${this.article.next}`
     }
   },
 
   head() {
     return {
-      title: this.article.title + ' - Premier League'
+      titleChunk: this.article.title
     }
-  },
+  }
 };
 </script>

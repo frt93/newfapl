@@ -12,8 +12,14 @@ export default {
 
   async asyncData({ app, store }) {
     // We can return a Promise instead of calling the callback
-    let { data } = await app.$axios.get('/articles/getpinned');
+    let { data } = await app.$axios.get('/articles/pinned');
     return store.dispatch('pinnedArticle', data)
+  },
+
+  head() {
+    return {
+      titleChunk: 'Главная'
+    }
   }
 }
 </script>

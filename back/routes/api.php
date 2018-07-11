@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,15 +24,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 Route::group(['prefix' => 'articles'], function () {
-    Route::get('/getlast', 'ApiController@getLastArticles');
-    Route::get('/getpinned', 'ApiController@getPinnedArticle');
+    Route::get('/', 'ArticlesController@index');
+    Route::get('/pinned', 'ArticlesController@getPinnedArticle');
+    Route::get('/create', 'ArticlesController@create');
+    Route::get('/{id}', 'ArticlesController@show');
+    Route::get('/{id}/edit', 'ArticlesController@edit');
 
+    Route::post('/store', 'ArticlesController@store');
+    Route::patch('/update/{article}', 'ArticlesController@update');
+    Route::delete('/getarticle/{id}', 'ArticlesController@destroy');
 
-    Route::post('articles', 'ApiController@storeArticle');
-    Route::get('/getarticle/{id}', 'ApiController@getArticle');
-    Route::patch('/update/{article}', 'ApiController@updateArticle');
-    Route::delete('/getarticle/{id}', 'ApiController@destroyArticle');
-
-    Route::get('/{id}/deactivate', 'ApiController@deactivateArticle');
-    Route::get('/{id}/activate', 'ApiController@activateArticle');
+    Route::get('/{id}/deactivate', 'ArticlesController@deactivate');
+    Route::get('/{id}/activate', 'ArticlesController@activate');
 });

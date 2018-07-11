@@ -1,14 +1,21 @@
 <?php namespace App;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
+use App\Http\Requests\ArticleRequest;
+
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Database\Eloquent\Model;
+
+use App\Traits\Article\Scopes;
+use App\Traits\Article\Relations;
+use App\Traits\Article\ManagingDataCollections;
+
 
 
 class Article extends Model
 {
+    use Relations, ManagingDataCollections, Scopes;
+
     protected $fillable = [
         'title',
         'excerpt',
@@ -24,46 +31,43 @@ class Article extends Model
     /**
      * Get all published articles matching the query.
      *
-     * @param $query $request
+     * @param $request
+     * @return mixed
      */
-    public function scopePublished($query, $request)
-    {
-        if (($request->co) || ($request->pl) || ($request->club)) {
-            $playerName = $request->pl;
-            $clubName = $request->club;
-            $competitionName = $request->co;
-
-            $query->where('published_at', '<=', Carbon::now())
-                ->when($playerName, function ($query) use ($playerName) {
-                    return $query->join('article_player', 'articles.id', '=', 'article_player.article_id')
-                        ->join('players', 'players.id', '=', 'article_player.player_id')
-                        ->select('articles.*', 'article_player.article_id')
-                        ->where('players.slug', $playerName)->distinct();
-                })
-                ->when($clubName, function ($query) use ($clubName) {
-                    return $query->join('article_club', 'articles.id', '=', 'article_club.article_id')
-                        ->join('clubs', 'clubs.id', '=', 'article_club.club_id')
-                        ->select('articles.*', 'article_club.article_id')
-                        ->where('clubs.slug', $clubName)->distinct();
-                })
-                ->when($competitionName, function ($query) use ($competitionName) {
-                    return $query->join('article_competition', 'articles.id', '=', 'article_competition.article_id')
-                        ->join('competitions', 'competitions.id', '=', 'article_competition.competition_id')
-                        ->select('articles.*', 'article_competition.article_id')
-                        ->where('competitions.slug', $competitionName)->distinct();
-                })
-                ->get();
-        }
+    public function getArticles($request) {
+        $articles = Article::latest('published_at')->published($request)->paginate(10);
+        return $articles;
     }
 
     /**
-     * Get all unpublished articles matching the query.
+     * Get pinned article
      *
-     * @param $query
+     * @return mixed
      */
-    public function scopeUnPublished($query)
+    public function pinned()
     {
-        $query->where('published_at', '>', Carbon::now());
+        if( !Redis::exists('pinnedArticle') ) {
+            $article = Article::where('pinned', '=', 1)->orderBy('id','asc')->first();
+            $article->ArticleRelatedData('show');
+            Redis::set('pinnedArticle', $article);
+        }
+        return Redis::get('pinnedArticle');
+    }
+
+    /**
+     * Store an article
+     *
+     * @param ArticleRequest $request
+     * @return mixed
+     */
+    public function store(ArticleRequest $request) {
+        $article = User::where('id', '=', 1)
+                        ->first()
+                        ->articles()
+                        ->create($request->all());
+        $this->syncArticleData($article, $request);
+
+        return $article;
     }
 
 
@@ -104,140 +108,19 @@ class Article extends Model
         }
     }
 
-
-    /**
-     * An article is owned by user(author).
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user()
+    public function activate($id)
     {
-        return $this->belongsTo('App\User');
+        $this->where('id', $id)->update(['published' => true]);
+        return response()->json([
+            'value' => true
+        ]);
     }
 
-    /**
-     * Get the tags, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function tags()
+    public function deactivate($id)
     {
-        return $this->belongsToMany('App\Tag')->withTimestamps();
-    }
-
-    /**
-     * Get a list of tag ids associated with current article
-     *
-     * @return array
-     */
-    public function getTagListAttribute()
-    {
-        return $this->tags->pluck('name');
-    }
-
-    /**
-     * Get the tags, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function categories()
-    {
-        return $this->belongsToMany('App\Category')->withTimestamps();
-    }
-
-    /**
-     * Get a list of categories ids associated with current article
-     *
-     * @return array
-     */
-    public function getCategoryListAttribute()
-    {
-        return $this->categories->pluck('id');
-    }
-
-    /**
-     * Get the competitions, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function competitions()
-    {
-        return $this->belongsToMany('App\Competition')->withTimestamps();
-    }
-
-    /**
-     * Get a list of competitions ids associated with current article
-     *
-     * @return array
-     */
-    public function getCompetitionListAttribute()
-    {
-        return $this->competitions->pluck('id');
-    }
-
-    /**
-     * Get the players, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function players()
-    {
-        return $this->belongsToMany('App\Player')->withTimestamps();
-    }
-
-    /**
-     * Get a list of players ids associated with current article
-     *
-     * @return array
-     */
-    public function getPlayerListAttribute()
-    {
-        return $this->players->pluck('id');
-    }
-
-    /**
-     * Get the clubs, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function clubs()
-    {
-        return $this->belongsToMany('App\Club')->withTimestamps();
-    }
-
-    /**
-     * Get a list of clubs ids associated with current article
-     *
-     * @return array
-     */
-    public function getClubListAttribute()
-    {
-        return $this->clubs->pluck('id');
-    }
-
-    /**
-     * Get the staff, associated with the given article.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-
-    public function staff()
-    {
-        return $this->belongsToMany('App\Staff')->withTimestamps();
-    }
-
-    /**
-     * Get a list of staff ids associated with current article
-     *
-     * @return array
-     */
-    public function getStaffListAttribute()
-    {
-        return $this->staff->pluck('id');
+        $this->where('id', $id)->update(['published' => false]);
+        return response()->json([
+            'value' => false
+        ]);
     }
 }

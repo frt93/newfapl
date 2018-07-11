@@ -1,5 +1,6 @@
 <template>
   <div class="container clearfix">
+    <span @click="addParams">Добавить параметры</span>
     <main id="maincontent" class="clearfix">
       <articlePreview 
         v-for="article in articles" 
@@ -28,6 +29,12 @@
       return {
         isSocialBlockOpen: false,
         articles: []
+      }
+    },
+
+    methods: {
+      addParams() {
+        this.$router.push({query: { page: '3' }})
       }
     },
 

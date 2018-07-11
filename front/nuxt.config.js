@@ -3,7 +3,10 @@ module.exports = {
   ** Headers of the page
   */
   head: {
-    title: 'newfapl',
+    titleTemplate: (titleChunk) => {
+      // If undefined or blank then we don't need the hyphen
+      return titleChunk ? `${titleChunk} - English Premier League` : 'English Premier League';
+    },
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -21,7 +24,15 @@ module.exports = {
   /*
   ** Customize the progress bar color
   */
-  loading: { color: '#38003c' },
+  loading: { color: '#38003c', failedColor: 'red' },
+
+  /*
+  ** Router setup
+  */
+  router: {
+    linkExactActiveClass: 'active',
+    linkActiveClass: ''
+  },
 
   /*
   **Nuxt.js modules

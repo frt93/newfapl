@@ -1,5 +1,7 @@
 <template>
-    <Articles />
+<div>{{this.$route.query}}
+  <div v-for="r in this.$route.query" :key="r">{{r}}</div>
+    <Articles /></div>
 </template>
 
 <script>
@@ -10,12 +12,17 @@ export default {
     Articles
   },
 
-  async asyncData({ app, params, store, query }) {
-    // We can return a Promise instead of calling the callback
-    let page = ( query.page ) ? '?page='+query.page : '';
+  watchQuery: ['page', 'club'],
 
-    let { data } = await app.$axios.get('/articles/getlast' + page)
+  async asyncData({ app, params, store, query }) {
+    let { data } = await app.$axios.get(`/articles?`)
     return store.dispatch('setArticles', data)
+  },
+
+  head() {
+    return {
+      titleChunk: 'Новости'
+    }
   }
 }
 </script>

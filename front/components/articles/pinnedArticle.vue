@@ -25,7 +25,7 @@
 											<img src="/i/eden200.jpg" alt="West Ham United v Manchester City">
 										</span>
 										<figcaption>
-											<span class="post-cat"></span>
+											<span class="post-cat" v-for="category in article.categories" :key="category.id">{{category.name}}</span>
 											<h4 class="title">{{ article.title }}</h4>
 											<p>{{ article.excerpt }}</p>
 										</figcaption>
