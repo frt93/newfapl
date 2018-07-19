@@ -122,32 +122,50 @@
     </div>
     </form>
   </main>
+  <selectPlugin />
 </div> 
 </template>
 
 <script>
+import selectPlugin from '~/components/ui/selectPlugin'
   export default {
-    async asyncData({ app, params, store }) {
-      let { data } = await app.$axios.get(`/articles/${params.id}/edit`)
+    components: {
+      selectPlugin
+    },
+    async asyncData ({ app, params, store }) {
+      let { data } = await app.$axios.get(`articles/${params.id}/edit`)
       return { article: data }
     },
 
     methods: {
-      saveArticle(form, params) {
-        const article = new FormData(form);
-        this.$axios.post(`/articles/update/${this.$route.params.id}`, article)
-            .then((res) => {
-
-            })
-            .catch((err) => {
-              console.log(err)
-            })
+      saveArticle (form) {
+        const article = new FormData(form)
+        this.$axios.post(`articles/update/${this.$route.params.id}`, article)
+          .then( (res) => {} )
+          .catch( (err) => {
+            console.log(err)
+          })
       }
     },
 
-    head() {
+    computed: {
+      arr() {
+        return  {
+          'body' : this.article.body
+        }
+      }
+    },
+
+    head () {
       return {
-        titleChunk: `Редактирование - ${this.article.title}`
+        titleChunk: `Редактирование - ${this.article.title}`,
+        script: [
+          { src: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js' },
+          { src: 'https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/js/select2.min.js' }
+        ],
+        link: [
+          { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css' }
+        ]
       }
     }
   }

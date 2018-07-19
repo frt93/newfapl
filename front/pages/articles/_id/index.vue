@@ -94,7 +94,7 @@
 </template>
 
 <script>
-import Social from '@/components/articles/social';
+import Social from '@/components/articles/social'
 
 export default {
   validate ({ params }) {
@@ -106,27 +106,27 @@ export default {
     Social
   },
 
-  async asyncData({ app, params }) {
+  async asyncData ({ app, params }) {
     let { data } = await app.$axios.get(`/articles/${params.id}`)
     return { article: data }
   },
 
   computed: {
-    editLink() {
-        return `/articles/${this.$route.params.id}/edit`
+    editLink () {
+      return `/articles/${this.$route.params.id}/edit`
     },
-    prevLink() {
-        return `/articles/${this.article.previous}`
+    prevLink () {
+      return `/articles/${this.article.previous}`
     },
-    nextLink() {
-        return `/articles/${this.article.next}`
+    nextLink () {
+      return `/articles/${this.article.next}`
     }
   },
 
-  head() {
+  head () {
     return {
       titleChunk: this.article.title
     }
   }
-};
+}
 </script>

@@ -75,23 +75,26 @@ class ArticlesController extends Controller
      *
      * @param Article $article
      * @param ArticleRequest $request
+     * @return mixed
      */
     public function store(Article $article, ArticleRequest $request)
     {
-        $article->store($request);
+        return $article->store($request);
     }
+
 
     /**
      * Update an article.
      *
      * @param Article $article
      * @param ArticleRequest $request
+     * @return Article
      */
-
     public function update(Article $article, ArticleRequest $request)
     {
         $article->update($request->all());
         $article->syncArticleData($article, $request);
+        return $article;
     }
 
     /**
@@ -102,7 +105,7 @@ class ArticlesController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
-    public function deactivate(Article $article, $id)
+    public function unPublish(Article $article, $id)
     {
         return $article->deactivate($id);
     }
@@ -115,7 +118,7 @@ class ArticlesController extends Controller
      * @param $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function activate(Article $article, $id)
+    public function publish(Article $article, $id)
     {
         return $article->activate($id);
     }

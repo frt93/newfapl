@@ -1,7 +1,5 @@
 <template>
-<div>{{this.$route.query}}
-  <div v-for="r in this.$route.query" :key="r">{{r}}</div>
-    <Articles /></div>
+  <Articles />
 </template>
 
 <script>
@@ -12,14 +10,16 @@ export default {
     Articles
   },
 
-  watchQuery: ['page', 'club'],
+  watchQuery: ['page'],
 
-  async asyncData({ app, params, store, query }) {
-    let { data } = await app.$axios.get(`/articles?`)
-    return store.dispatch('setArticles', data)
+  async asyncData ({ app, store, query }) {
+    if (!store.getters.getArticles.length) {
+      let { data } = await app.$axios.post('articles', query)
+      return store.dispatch('setArticles', data)
+    }
   },
 
-  head() {
+  head () {
     return {
       titleChunk: 'Новости'
     }

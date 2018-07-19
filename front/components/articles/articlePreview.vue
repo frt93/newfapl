@@ -86,8 +86,8 @@
       },
       publishStatusLink() {
         return  this.publishStatus 
-                ? '/articles/' + this.id + '/deactivate' 
-                : '/articles/' + this.id + '/activate' 
+                ? '/articles/' + this.id + '/unpublish' 
+                : '/articles/' + this.id + '/publish' 
       }
     },
 

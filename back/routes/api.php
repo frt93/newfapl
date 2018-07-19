@@ -34,6 +34,6 @@ Route::group(['prefix' => 'articles'], function () {
     Route::patch('/update/{article}', 'ArticlesController@update');
     Route::delete('/getarticle/{id}', 'ArticlesController@destroy');
 
-    Route::get('/{id}/deactivate', 'ArticlesController@deactivate');
-    Route::get('/{id}/activate', 'ArticlesController@activate');
+    Route::get('/{id}/unpublish', 'ArticlesController@unPublish');
+    Route::get('/{id}/publish', 'ArticlesController@publish');
 });

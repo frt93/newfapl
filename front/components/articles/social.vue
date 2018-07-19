@@ -38,9 +38,9 @@
     name: 'social',
     data() {
       return {
-        isSocialBlockOpen: false,
+        isSocialBlockOpen: false
       }
-    },
-  }  
+    }
+  }
 </script>
 

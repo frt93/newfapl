@@ -10,13 +10,15 @@ export default {
     Article
   },
 
-  async asyncData({ app, store }) {
+  async asyncData ({ app, store }) {
     // We can return a Promise instead of calling the callback
-    let { data } = await app.$axios.get('/articles/pinned');
-    return store.dispatch('pinnedArticle', data)
+    if (store.getters.getPinnedArticle.length == 0) {
+      let { data } = await app.$axios.get('/articles/pinned')
+      return store.dispatch('pinnedArticle', data)
+    }
   },
 
-  head() {
+  head () {
     return {
       titleChunk: 'Главная'
     }

@@ -46,8 +46,9 @@ module.exports = {
   **Axios module config
   */
   axios: {
-    baseURL: process.env.BASE_URL || 'http://back.loc/api',
-    retry: { retries: 5 }
+    baseURL: process.env.BASE_URL || 'http://localhost:3000/api/',
+    retry: { retries: 5 },
+    debug: false
   },
 
   /*
@@ -79,4 +80,7 @@ module.exports = {
       }
     }
   },
+  serverMiddleware: [
+    '~/api/index.js'
+  ]
 }

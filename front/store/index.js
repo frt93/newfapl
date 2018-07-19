@@ -10,10 +10,11 @@ const UserData = () => new Vuex.Store({
     userData: [],
     isUserLogged: true,
     articles: [],
-    articlesMeta: [],
+    articlesMeta: {pages: {}},
     pinnedArticle: [],
     currentArticle: [],
-    laravelCsrfToken: null
+    laravelCsrfToken: null,
+    filtersData: {competitions: {}, clubs: {}, players: {}}
   },
   
   mutations: {
@@ -24,13 +25,26 @@ const UserData = () => new Vuex.Store({
       state.isUserLogged = true;
       state.userData = payload
     },
-    setArticles(state, response) {
-      state.articles = response.data;
+    setArticles (state, response) {
+      response.forEach((article, i) => {
+        state.articles.push(article);
+      });
+      
     },
-    pinnedArticle(state,article) {
+    setArticlesMeta (state, data) {
+      state.articlesMeta.pages.last = data.last_page;
+      state.articlesMeta.pages.current = data.current_page;
+      if ( !state.articlesMeta.pages.start ) {
+        state.articlesMeta.pages.start = data.current_page;
+      }
+      state.filtersData.competitions = data.co;
+      state.filtersData.clubs = data.club;
+      state.filtersData.players = data.pl;
+    },
+    pinnedArticle (state,article) {
       state.pinnedArticle = article
     },
-    currentArticle(state, article) {
+    currentArticle (state, article) {
       state.currentArticle = article
     },
     setLaravelCsrfToken (state, token) {
@@ -39,45 +53,60 @@ const UserData = () => new Vuex.Store({
   },
 
   actions: {
-    nuxtServerInit (VuexContext, context) {
-      return Promise.resolve(context.$axios.get('http://back.loc/gettoken')
-        .then(res => {
-          VuexContext.commit('setLaravelCsrfToken', res.data)
+    nuxtServerInit (VuexContext, context, query) {
+      // return Promise.resolve(context.$axios.get('http://back.loc/gettoken')
+      //   .then(res => {
+      //     VuexContext.commit('setLaravelCsrfToken', res.data)
+      //   }))
+      if (context.route.name == 'articles') {
+        return Promise.resolve(context.$axios.post('articles', context.route.query)
+          .then(res => {
+            VuexContext.dispatch('setArticles', res.data)
         }))
+      }
     },
-    userLogged(VuexContext, user) {
+    userLogged (VuexContext, user) {
         VuexContext.commit('userLogged', user)
     },
-    setArticles(VuexContext, response) {
-      VuexContext.commit('setArticles', response)
+    setArticles (VuexContext, articles) {
+      VuexContext.commit('setArticles', articles.data);
+      VuexContext.commit('setArticlesMeta', articles)
     },
-    pinnedArticle(VuexContext, article) {
+    pinnedArticle (VuexContext, article) {
       VuexContext.commit('pinnedArticle', article)
     },
-    currentArticle(VuexContext, article) {
+    currentArticle (VuexContext, article) {
       VuexContext.commit('currentArticle', article)
     }
   },
 
   getters: {
-    userData(state) {
+    userData (state) {
       return state.userData
     },
 
-    getArticles(state) {
+    getArticles (state) {
       return state.articles
     },
 
-    getPinnedArticle(state) {
+    getArticlesMeta (state) {
+      return state.articlesMeta
+    },
+
+    getPinnedArticle (state) {
       return state.pinnedArticle
     },
 
-    getCurrentArticle(state) {
+    getCurrentArticle (state) {
       return state.currentArticle
     },
 
-    getLaravelCsrfToken(state) {
+    getLaravelCsrfToken (state) {
       return state.laravelCsrfToken
+    },
+
+    getFiltersData (state) {
+      return state.filtersData
     }
   }
 })
