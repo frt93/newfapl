@@ -1,5 +1,5 @@
 <template>
-  <Articles />
+  <Articles :articlesData="articles"></Articles>
 </template>
 
 <script>
@@ -10,13 +10,9 @@ export default {
     Articles
   },
 
-  watchQuery: ['page'],
-
   async asyncData ({ app, store, query }) {
-    if (!store.getters.getArticles.length) {
-      let { data } = await app.$axios.post('articles', query)
-      return store.dispatch('setArticles', data)
-    }
+      let { data } = await app.$axios.post('articles', {query, ...{'ancillarydata': true}})
+      return {articles: data}
   },
 
   head () {

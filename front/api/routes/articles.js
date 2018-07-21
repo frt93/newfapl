@@ -9,18 +9,34 @@ const form = multer();
 /* GET articles listing. */
 router.post('/articles', function (req, res) {
   let query = '';
-  if ( req.body.page || req.body.club || req.body.pl ) {
+  if ( req.body.page || req.body.co || req.body.club || req.body.pl || req.body.ancillary) {
     query = '?'
   }
 
-  if ( req.body.co ) query = query + '&co=' + req.body.co
-  if ( req.body.club ) query = query + '&club=' + req.body.club
-  if ( req.body.pl ) query = query + '&pl=' + req.body.pl
-  if ( req.body.page ) query = query + '&page=' + req.body.page
-
+  if ( req.body.co ) query = query + '&co=' + req.body.co;
+  if ( req.body.club ) query = query + '&club=' + req.body.club;
+  if ( req.body.pl ) query = query + '&pl=' + req.body.pl;
+  if ( req.body.page ) query = query + '&page=' + req.body.page;
+  if ( req.body.ancillary ) query = query + '&ancillarydata=' + req.body.ancillary;
+  
   axios.get(`/articles${query}`)
     .then( function (response) {
-      response.data.data.forEach((article, i) => {
+      const obj = response.data;
+      if ( req.body.ancillary ) {
+        var articles = { 
+          data: obj.data, 
+          pages: {
+            current: obj.current_page,
+            last: obj.last_page,
+          },
+          filtersData: obj.filtersData 
+        }
+      } else {
+        var articles = { 
+          data: obj.data
+        }
+      }
+      articles.data.forEach((article, i) => {
         let keys = ['created_at', 'updated_at', 'user_id', 'pinned'];
 
         keys.forEach( (key) => {
@@ -28,7 +44,8 @@ router.post('/articles', function (req, res) {
         });
 
       })
-      res.json(response.data)
+      console.log(articles)
+      res.json(articles)
     })
     .catch( function( err ) {
       res.status(500).json({ 'error': 'Something failed!' });
@@ -119,7 +136,6 @@ router.get('/articles/:id/edit', function (req, res) {
 router.post('/articles/update/:id', form.fields([]), (req, res) => {
   const id = parseInt(req.params.id)
   let article = req.body;
-
   axios.post(`/articles/update/${id}`, article)
     .then( (response) => {
       res.json( response.data )

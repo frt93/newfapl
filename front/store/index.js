@@ -58,12 +58,6 @@ const UserData = () => new Vuex.Store({
       //   .then(res => {
       //     VuexContext.commit('setLaravelCsrfToken', res.data)
       //   }))
-      if (context.route.name == 'articles') {
-        return Promise.resolve(context.$axios.post('articles', context.route.query)
-          .then(res => {
-            VuexContext.dispatch('setArticles', res.data)
-        }))
-      }
     },
     userLogged (VuexContext, user) {
         VuexContext.commit('userLogged', user)

@@ -37,9 +37,11 @@ class Article extends Model
     public function getArticles($request) {
         $articles = Article::latest('published_at')->published($request)->paginate(10);
         $filter = collect ([
-            "co" => $this->get_competitions(),
-            "club" => $this->get_clubs($request),
-            "pl" => $this->get_players($request)
+            "filtersData" => collect ([
+                "co" => $this->get_competitions(),
+                "club" => $this->get_clubs($request),
+                "pl" => $this->get_players($request)
+            ])
         ]);
         return $filter->merge($articles);
     }

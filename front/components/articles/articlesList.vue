@@ -6,9 +6,9 @@
                             container="content"
                             reset-btn-value="Сбросить"
                             search-btn-value="Поиск"
-                            :competitions="this.filterData.competitions"
-                            :clubs="this.filterData.clubs"
-                            :players="this.filterData.players"
+                            :competitions="this.filterData.co"
+                            :clubs="this.filterData.club"
+                            :players="this.filterData.pl"
                             competition-slug="all"
                             competition-name="Все турниры"
                             club-slug="all"
@@ -41,10 +41,9 @@
               loadBtnValue="Загрузить еще"
               loadingText="Грузим статьи"
               fetchErrMsg="Не удается получить данные"
-              model="Articles"
-              :startPage="this.$store.getters.getArticlesMeta.pages.start"
-              :currentPage="this.$store.getters.getArticlesMeta.pages.current"
-              :lastPage="this.$store.getters.getArticlesMeta.pages.last">
+              model="articles"
+              :pages="pages"
+              @addArticles="addArticles">
       </pagination>
     </main>
   </div>
@@ -64,13 +63,32 @@
     data() {
       return {
         isSocialBlockOpen: false,
-        articles: []
+        articles: [],
+        pages : {
+          start:this.articlesData.pages.current,
+          last:this.articlesData.pages.last
+        }
+      }
+    },
+
+    methods: {
+      addArticles(articles) {
+        articles.forEach((article, i) => {
+          this.articles.push(article);
+        });
+      }
+    },
+
+    props: {
+      articlesData: {
+        type:Object,
+        required: true
       }
     },
 
     created() {
-      this.articles = this.$store.getters.getArticles
-      this.filterData = this.$store.getters.getFiltersData
+      this.articles = this.articlesData.data
+      this.filterData = this.articlesData.filtersData
     }
   }
 </script>
