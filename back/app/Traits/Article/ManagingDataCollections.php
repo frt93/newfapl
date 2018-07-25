@@ -108,7 +108,7 @@ trait ManagingDataCollections {
      * @param request
      * @return array
      */
-    public static function get_clubs($request)
+    public static function get_clubs($slug)
     {
         $unpickedClubValue = 'Все клубы';
 
@@ -116,8 +116,8 @@ trait ManagingDataCollections {
             ['slug' => 'all', 'name' => $unpickedClubValue]
         ]);
 
-        if ($request) {
-            if (Competition::where('slug', $request)->exists()) {
+        if ($slug) {
+            if (Competition::where('slug', $slug)->exists()) {
                 $clubs = Club::all('slug', 'name');
                 foreach ($clubs as $club) {
                     $clubsList->push(['slug' => $club->slug, 'name' => $club->name]);
@@ -134,7 +134,7 @@ trait ManagingDataCollections {
      * @param request
      * @return array
      */
-    public static function get_players($request)
+    public static function get_players($slug)
     {
         $unpickedPlayerValue = 'Все игроки';
 
@@ -142,8 +142,8 @@ trait ManagingDataCollections {
             ['slug' => 'all', 'name' => $unpickedPlayerValue]
         ]);
 
-        if ($request) {
-            if (Club::where('slug', $request)->exists()) {
+        if ($slug) {
+            if (Club::where('slug', $slug)->exists()) {
                 $players = Player::all('slug', 'name');
                 foreach ($players as $player) {
                     $playersList->push(['slug' => $player->slug, 'name' => $player->name]);
@@ -152,5 +152,60 @@ trait ManagingDataCollections {
         }
 
         return $playersList;
+    }
+
+    public static function picked_params($request)
+    {
+
+        $co = collect([]);
+        $club = collect ([]);
+        $pl = collect ([]);
+
+        if ( $request->co && Competition::where('slug', $request->co)->exists()) {
+            $picked_competition = Competition::where('slug', $request->co)->get();
+            foreach ($picked_competition as $item) {
+                $co = collect ([
+                    'slug' => $item->slug, 'name' => $item->name
+                ]);
+            }
+        } else {
+            $co  = collect ([
+                'slug' => 'all', 'name' => 'Все турниры'
+            ]);
+        }
+
+        if ( $request->club && Club::where('slug', $request->club)->exists()) {
+            $picked_club = Club::where('slug', $request->club)->get();
+
+            foreach ($picked_club as $item) {
+                $club = collect ([
+                    'slug' => $item->slug, 'name' => $item->name
+                ]);
+            }
+        } else {
+            $club = collect ([
+                'slug' => 'all', 'name' => 'Все клубы'
+            ]);
+        }
+
+        if ( $request->pl && Player::where('slug', $request->pl)->exists()) {
+            $picked_player = Player::where('slug', $request->pl)->get();
+            foreach ($picked_player as $item) {
+                $pl = collect ([
+                    'slug' => $item->slug, 'name' => $item->name
+                ]);
+            }
+        } else {
+            $pl = collect ([
+                'slug' => 'all', 'name' => 'Все игроки'
+            ]);
+        }
+        $picked_params = collect([
+            'co' => $co,
+            'club' => $club,
+            'pl' => $pl
+        ]);
+
+        return $picked_params;
     }
 }

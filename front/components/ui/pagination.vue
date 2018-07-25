@@ -1,12 +1,12 @@
 <template>
   <div v-if="this.type == 'default'">
     <div class="btn loadmore" 
-         v-if="(errorsCount > 15) || (!isLazyLoad && !isLoading && this.currentPage < this.pages.last)" 
+         v-if="(errorsCount > 15) || (!isLazyLoad && !isLoading && this.pages.current < this.pages.last)" 
          @click="fetchData">
       {{ this.loadBtnValue }}
     </div>
 
-    <div class="loader" v-if="isLoading && this.currentPage < this.pages.last">
+    <div class="loader" v-if="isLoading && this.pages.current < this.pages.last">
       <span v-if="errorsCount < 1">{{ this.loadingText }}</span>
       <span v-if="errorsCount > 0">{{ this.fetchErrMsg }}</span>
       <div class="loader-line">
@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <div class="contentNotFound clearfix" v-if="( this.currentPage || this.pages.start ) == this.pages.last">
+    <div class="contentNotFound clearfix" v-if="( this.pages.current || this.pages.start ) == this.pages.last">
       Больше нет новостей, удовлетворяющих запросу
     </div>
     <div class="contentNotFound clearfix" v-if="this.pages.start > this.pages.last">
@@ -36,7 +36,7 @@ export default {
       isReseted: true,
       errorsCount: 0,
 
-      currentPage: this.pages.start
+      pages: this.$store.getters.getArticles.pages
     }
   },
   props: {
@@ -63,19 +63,12 @@ export default {
     fetchErrMsg: {
       type: String,
       required: true
-    },
-    pages: {
-      type: Object,
-      required: true
-    },
+    }
   },
 
   computed: {
-    nextPage() {
-      return +this.currentPage+1
-    },
     isLazyLoad() {
-      return ( (this.currentPage - this.pages.start ) > 1 ) ? false : true
+      return ( (this.pages.current - this.pages.start ) > 1 ) ? false : true
     }
   },
   methods: {
@@ -89,13 +82,15 @@ export default {
       if( this.errorsCount > 15 ) {
         this.errorsCount = 0
       };
-      let query = this.$route.query;
-      await this.$axios.post(this.model, {query, ...{'page': this.nextPage}})
+      let queries = {...this.$route.query, ...{'page': this.pages.next}};
+      await this.$axios.post(this.model, queries)
         .then( (res) => {
-          this.$emit('addArticles', res.data.data);
-          this.currentPage++;
-          this.$router.push({ query: { page: this.currentPage }})
-          this.errorsCount = 0;                    
+          this.pages.current++;
+          this.$emit('addArticles', {...res.data, ...{'pages':this.pages}} );
+          this.$router.replace({ 
+            query: {...this.$route.query, ...{'page': this.pages.current}} 
+          })
+          this.errorsCount = 0;                 
           this.isLoading = false;
         })
         .catch( (err) => {
@@ -119,7 +114,7 @@ export default {
       if(diffHeight <= scrollTop && !this.isLoading 
                                  && this.errorsCount < 1 
                                  && this.isLazyLoad 
-                                 && (this.pages.last > this.currentPage) ) {
+                                 && (this.pages.last > this.pages.current) ) {
         return this.fetchData()
       }
     }
@@ -133,7 +128,7 @@ export default {
         //         this.isLazyLoad = true;
         //         this.isReseted = isReseted;
         //         this.fetchPath = url;
-        //         this.pages.start = this.currentPage = 1;
+        //         this.pages.start = this.pages.current = 1;
         //         ( lastpage ) ? this.pages.start.last = lastpage : '';
         //     })
         // },
@@ -146,12 +141,10 @@ export default {
   beforeDestroy() {
     if (process.browser) {
       window.removeEventListener('scroll', this.load);
-
       if( this.errorsCount > 0 ) {
         clearTimeout( this.recursiveFetch )
       }
     }
-    
   }
 }
 </script>

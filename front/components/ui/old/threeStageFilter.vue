@@ -1,12 +1,12 @@
 <template>
     <section class="contentFilter clearfix">
         <div class="dropdown" 
-             :class="{active:co.length}" 
+             :class="{active:co}" 
              @click.self="isOpened($event)">
                 {{ pickedCoName }}
              
             <ul>
-                <li v-for="competition in competitionsList"
+                <li v-for="competition in competitions"
                     :key="competition.slug"
                     @click="pickCompetition($event, competition.slug, competition.name)"
                     :class="{picked: pickedCoSlug == competition.slug}">{{ competition.name }}</li>
@@ -14,11 +14,11 @@
         </div>
 
         <div class="dropdown" 
-             :class="{disabled: !co.length || loadingClubs, loading: loadingClubs, active: club.length}" 
-             @click.self="isOpened($event) && co.length">
+             :class="{disabled: !co || loadingClubs, loading: loadingClubs, active: club}" 
+             @click.self="isOpened($event)">
 
                 {{ pickedClubName }}
-            <ul v-if="co.length">
+            <ul v-if="co">
                 <li v-for="club in clubsList" 
                     :key="club.slug"
                     @click="pickClub($event, club.slug, club.name)"
@@ -33,12 +33,12 @@
         </div>
 
         <div class="dropdown" 
-             :class="{disabled: (!co.length || !club.length || loadingPlayers), loading: loadingPlayers, active: pl.length}" 
-             @click.self="isOpened($event) && (co.length && club.length)">
+             :class="{disabled: (!co || !club || loadingPlayers), loading: loadingPlayers, active: pl}" 
+             @click.self="isOpened($event)">
 
 
                 {{ pickedPlName }}
-            <ul v-if="club.length">
+            <ul v-if="club">
                 <li v-for="player in playersList"
                     :key="player.slug"
                     @click="pickPlayer($event, player.slug, player.name)"
@@ -54,9 +54,9 @@
 
         <div class="btn reset" 
              tabindex="0"
-             :class="{disabled: ( errorsCount > 0 && errorsCount < 15 ) && !co.length}"
+             :class="{disabled: ( errorsCount > 0 && errorsCount < 15 ) && !co}"
              @click="resetFilter" 
-             v-if="co.length || !reseted">
+             v-if="co || !reseted">
                 {{ this.resetBtnValue }}
             <div class="icn reset"></div>
         </div>
@@ -64,7 +64,7 @@
         <div class="btn filter" 
              tabindex="1"
              :class="{disabled: fetching}"
-             v-if="picked && co.length"
+             v-if="picked && co"
              @click="fetchData(false)">{{ this.searchBtnValue }}
         </div>
 
@@ -98,9 +98,8 @@
                  * Variables that store arrays with a list of names and 
                  * the corresponding slugs of competition, clubs and players
                  */
-                competitionsList: [],
-                clubsList: [],
-                playersList: [],
+                clubsList: this.clubs,
+                playersList: this.players,
 
                 /**
                  * Variables of the loading state of clubs / players lists
@@ -111,14 +110,22 @@
                 /**
                  * Variables that hold the slug and the name of the selected competition / club / player 
                  */
-                pickedCoSlug: this.competitionSlug,
-                pickedCoName: this.competitionName,
+                pickedCoSlug: this.selected.co.slug,
+                pickedCoName: this.selected.co.name,
 
-                pickedClubSlug: this.clubSlug,
-                pickedClubName: this.clubName,
+                pickedClubSlug: this.selected.club.slug,
+                pickedClubName: this.selected.club.name,
                 
-                pickedPlSlug: this.playerSlug,
-                pickedPlName: this.playerName,
+                pickedPlSlug: this.selected.pl.slug,
+                pickedPlName: this.selected.pl.name,
+
+                fetchClubsErrMsg:"Не удалось получить список клубов",
+                fetchPlayersErrMsg:"Не удалось получить список игроков",
+                fetchDataErrMsg:"Не удалось получить данные",
+                exceededRequestsMsg:"Превышено количество попыток запроса. Попробуйте снова",
+
+                resetBtnValue:"Сбросить",
+                searchBtnValue:"Поиск"
             }
         },
 
@@ -130,78 +137,31 @@
             'competitions',
             'clubs',
             'players',
-
-            'competitionSlug',
-            'competitionName',
-
-            'clubSlug',
-            'clubName',
-
-            'playerSlug',
-            'playerName',
-
-            'unpickedCompetition',
-            'unpickedClub',
-            'unpickedPlayer',
-
-            'apiPath',
+            'selected',
+            'defaults',
             'model',
-            'container',
-            'resetBtnValue',
-            'searchBtnValue',
-
-            'fetchClubsErrMsg',
-            'fetchPlayersErrMsg',
-            'fetchDataErrMsg',
-            'exceededRequestsMsg',
-
-            /**
-             * Flag that controls the visibility state of the reset button after rendering the page by the server. 
-             * In the case of the presence of filtration parameters in the URL, the variable return true 
-             * or false in the absence of these
-             */
-            'isFiltered'
+            'container'
         ],
         /**
          * Computed values of request's parametres
          */
         computed: {
             co() {
-                return ( this.pickedCoSlug !='all' ? '?co='+this.pickedCoSlug : '' )
+                return ( this.pickedCoSlug != 'all' ? {co: this.pickedCoSlug} : '' )
             },
 
             club() {
-                return ( this.pickedClubSlug !='all' ? '&club='+this.pickedClubSlug : '' )
+                return ( this.pickedClubSlug != 'all' ? {club:this.pickedClubSlug} : '')
             },
 
             pl() {
-                return ( this.pickedPlSlug !='all' ? '&pl='+this.pickedPlSlug : '' )
+                return ( this.pickedPlSlug != 'all' ? {pl: this.pickedPlSlug} : '' )
             },
-            requestUrl() {
-                return ( this.apiPath + '/' + this.model + this.co + this.club + this.pl)
-            }
+            query() {
+              return {...this.co, ...this.club, ...this.pl}
+			}
         },
         methods: {
-
-            /**
-            * Parse received from server JSON string to associative array of competitions / clubs / players.
-            * 
-            * If url of rendered page already have get parameters, set `reseted` flag to false value and
-            * $emit the filtering event, passing current url to the pagination component
-            * 
-            * @param  {String}
-            * @return {Object, Boolean}
-             */
-            getSchedule() {
-                this.competitionsList = this.competitions;
-                this.clubsList = this.clubs;
-                this.playersList = this.players;
-
-                if (this.isFiltered) {
-                    this.reseted = false;
-                    this.$root.$emit( 'filtered', this.requestUrl, this.reseted );
-                }
-            },
 
             /**
             * Function of interaction with the competitions block.
@@ -255,20 +215,26 @@
             * @param  {String}
             * @return {Array}
             */
-            fetchClubsList(slug) {
-                this.loadingClubs = true;
-                axios.get( this.apiPath + '?getclubslist=' + slug )
-                .then( response => {              
-                    this.loadingClubs = this.fetchClubsError = false;
-                    this.clubsList = response.data
-                })
-                .catch( error => {
-                    console.log(error);
-                    this.fetchClubsError = true;
-                    this.loadingPlayers = this.fetchPlayersError =  false;
+            async fetchClubsList(slug) {
+                let clubsInStore = this.$store.getters.getClubsByCompetition(slug)
+                if (clubsInStore) {
+                    this.clubsList = clubsInStore;
+                } else {
+                    this.loadingClubs = true;
+                    await this.$axios.post( '/filters', {'getclubslist': slug} )
+                    .then( response => {              
+                        this.loadingClubs = this.fetchClubsError = false;
+                        this.clubsList = response.data;
+                        this.$store.dispatch( 'addFiltersData', {data: response.data, type:"clubs", slug} )
+                    })
+                    .catch( error => {
+                        console.log(error);
+                        this.fetchClubsError = true;
+                        this.loadingPlayers = this.fetchPlayersError =  false;
 
-                    setTimeout( () => { this.clubsListRecursion(slug) }, 3000 )
-                })
+                        setTimeout( () => { this.clubsListRecursion(slug) }, 3000 )
+                    })
+                }
             },
 
             clubsListRecursion(slug) {
@@ -284,22 +250,31 @@
             * @param  {String}
             * @return {Array}
             */
-            fetchPlayersList(slug) {
-                this.loadingPlayers = true;
-                axios.get(this.apiPath + '?getplayerslist=' + slug)
-                .then(response => {              
-                    this.loadingPlayers = this.fetchPlayersError = false;
-                    this.playersList = response.data
-                })
-                .catch( error => {
-                    console.log(error);
-                    this.fetchPlayersError = true;
-                    setTimeout( () => { this.playersListRecursion(slug) }, 3000 )
-                })
+            async fetchPlayersList(slug) {
+                let playersInStore = this.$store.getters.getPlayersByClub(slug);
+                if (playersInStore) {
+                    this.playersList = playersInStore;
+                } else {
+                    this.loadingPlayers = true;
+                    await this.$axios.post( '/filters', {'getplayerslist': slug} )
+                    .then(response => {              
+                        this.loadingPlayers = this.fetchPlayersError = false;
+                        this.playersList = response.data;
+                        this.$store.dispatch( 'addFiltersData', {data: response.data, type:"players", slug} )
+                    })
+                    .catch( error => {
+                        console.log(error);
+                        this.fetchPlayersError = true;
+                        setTimeout( () => { this.playersListRecursion(slug) }, 3000 )
+                    })
+                }
             },
 
             playersListRecursion(slug) {
-                if (this.pickedClubSlug != slug) {
+                if (this.pickedClubSlug != slug ) {
+                    if (slug = 'all') {
+                      this.loadingPlayers = this.fetchPlayersError = false
+                    }
                     return false;
                 } else {
                     return this.fetchPlayersList(slug)
@@ -308,22 +283,22 @@
 
             resetClubsBlock() {
                 this.pickedClubSlug =  'all';
-                this.pickedClubName = this.unpickedClub;
+                this.pickedClubName = this.defaults.club;
             },
 
             resetPlayersBlock() {
                 this.pickedPlSlug = 'all';
-                this.pickedPlName = this.unpickedPlayer;
+                this.pickedPlName = this.defaults.pl;
             },
 
             resetFilter() {
-                this.pickedCoName = this.unpickedCompetition;
+                this.pickedCoName = this.defaults.co;
                 this.pickedCoSlug = 'all';
                 this.resetClubsBlock();
                 this.resetPlayersBlock();
                 this.loadingClubs = this.loadingPlayers = this.fetchClubsError = this.fetchPlayersError = false;
                 this.errorsCount = 0;
-                if ( !this.reseted) {
+                if ( !this.reseted ) {
                     this.fetchData(true)
                 }
             },
@@ -334,39 +309,32 @@
             * and send the data to the pagination component
             * @return {Array}
             */
-            fetchData(ifReseting) {
+            async fetchData(ifReseting) {
                 this.fetching = true;
                 if( this.errorsCount > 15 ) {
                     this.errorsCount = 0
                 };
-                axios.get( this.requestUrl )
+                await this.$axios.post(this.model, {...this.query, ...{'ancillary': 'pages'} })
                 .then( response => {
                     this.reseted = ifReseting;
-                    var container = document.getElementById( this.container );
-                    container.innerHTML = '';
-                    container.insertAdjacentHTML( 'beforeEnd', response.data.content );
+                    this.$emit('filterArticles', response.data);
                     
                     this.fetching = this.picked = false;
                     this.errorsCount = 0;
 
-                    window.history.replaceState(null, null, '/' + this.model + this.co + this.club + this.pl);
-                    var lastpage = response.data.lastpage;
-                    /**
-                    * $emit the filtering event and pass the new request url to the pagination component
-                    */
-                    this.$root.$emit( 'filtered', this.requestUrl, this.reseted, lastpage );
+                    this.$router.replace( {query: this.query} )
                 })
                 .catch( error => {
                     console.log( error );
                     this.picked =  true;
-                    let url = this.requestUrl;
+                    let query = this.query;
                     this.errorsCount++;
-                    setTimeout( () => { this.fetchDataRecursion(ifReseting, url) }, 2000 )
+                    setTimeout( () => { this.fetchDataRecursion(ifReseting, query) }, 2000 )
                 })
             },
 
-            fetchDataRecursion(ifReseting, url) {
-                if(url != this.requestUrl ) {
+            fetchDataRecursion(ifReseting, query) {
+                if(query != this.query ) {
                     this.fetching = false;
                     this.errorsCount = 0;
                     return false
@@ -410,16 +378,23 @@
          * 
         */
         watch: {
-            requestUrl: function(newVal, oldVal) {
-                this.picked = ( this.co !='' && newVal != ( this.apiPath + '/' + this.model + window.location.search ) ) ? true : false;
+            query: function(newVal, oldVal) {
+              let route = this.$route.query
+              this.picked = ( this.co && 
+                                      ( newVal.co != route.co ||
+                                        newVal.club != route.club ||
+                                        newVal.pl != route.pl ) ) 
+                            ? true : false;
             },
             fetching: function() {
-                document.getElementById( this.container ).classList.toggle('loading')
+              document.getElementById( this.container ).classList.toggle('loading')
             }
         },
 
         created() {
-            this.getSchedule();
+          if(this.$route.query.co || this.$route.query.club || this.$route.query.pl) {
+            this.reseted = false
+          }
         }
     }
 </script>

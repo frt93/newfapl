@@ -35,14 +35,21 @@ class Article extends Model
      * @return mixed
      */
     public function getArticles($request) {
-        $articles = Article::latest('published_at')->published($request)->paginate(10);
+        $articles = Article::latest('published_at')->published($request)->paginate(3);
         $filter = collect ([
             "filtersData" => collect ([
                 "co" => $this->get_competitions(),
-                "club" => $this->get_clubs($request),
-                "pl" => $this->get_players($request)
+                "club" => $this->get_clubs($request->co),
+                "pl" => $this->get_players($request->club),
+                "picked" => $this->picked_params($request),
+                "defaults" => collect([
+                    "co" => "Все турниры",
+                    "club" => "Все клубы",
+                    "pl" => "Все игроки"
+                ])
             ])
         ]);
+
         return $filter->merge($articles);
     }
 

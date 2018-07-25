@@ -37,3 +37,5 @@ Route::group(['prefix' => 'articles'], function () {
     Route::get('/{id}/unpublish', 'ArticlesController@unPublish');
     Route::get('/{id}/publish', 'ArticlesController@publish');
 });
+
+Route::get('/filters', 'ApiController@index');

@@ -8,43 +8,42 @@ const form = multer();
 
 /* GET articles listing. */
 router.post('/articles', function (req, res) {
-  let query = '';
+  let query;
   if ( req.body.page || req.body.co || req.body.club || req.body.pl || req.body.ancillary) {
     query = '?'
   }
 
-  if ( req.body.co ) query = query + '&co=' + req.body.co;
-  if ( req.body.club ) query = query + '&club=' + req.body.club;
-  if ( req.body.pl ) query = query + '&pl=' + req.body.pl;
+  if ( req.body.co && req.body.co != 'all' ) query = query + '&co=' + req.body.co;
+  if ( req.body.club && req.body.club != 'all' ) query = query + '&club=' + req.body.club;
+  if ( req.body.pl && req.body.pl != 'all' ) query = query + '&pl=' + req.body.pl;
   if ( req.body.page ) query = query + '&page=' + req.body.page;
-  if ( req.body.ancillary ) query = query + '&ancillarydata=' + req.body.ancillary;
+  if ( req.body.ancillary ) query = query + '&ancillary=' + req.body.ancillary;
   
   axios.get(`/articles${query}`)
     .then( function (response) {
       const obj = response.data;
-      if ( req.body.ancillary ) {
-        var articles = { 
-          data: obj.data, 
-          pages: {
-            current: obj.current_page,
-            last: obj.last_page,
-          },
-          filtersData: obj.filtersData 
-        }
-      } else {
-        var articles = { 
-          data: obj.data
-        }
+      var articles = { 
+        data: obj.data
       }
+      if ( req.body.ancillary ) {
+        const pages = {
+          current: obj.current_page, 
+          last: obj.last_page
+        }
+        var articles = {...articles, ...{'pages': pages} }
+      }
+      if ( req.body.ancillary == 'all' ) {
+        var articles = {...articles, ...{filtersData: obj.filtersData} }
+      }
+      
       articles.data.forEach((article, i) => {
         let keys = ['created_at', 'updated_at', 'user_id', 'pinned'];
-
         keys.forEach( (key) => {
           delete article[key]
         });
 
       })
-      console.log(articles)
+      
       res.json(articles)
     })
     .catch( function( err ) {

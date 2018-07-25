@@ -11,7 +11,7 @@ export default {
   },
 
   async asyncData ({ app, store, query }) {
-      let { data } = await app.$axios.post('articles', {query, ...{'ancillarydata': true}})
+      let { data } = await app.$axios.post('articles', {...query, ...{'ancillary': 'all'}})
       return {articles: data}
   },
 
