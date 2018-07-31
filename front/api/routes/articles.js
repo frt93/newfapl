@@ -18,7 +18,7 @@ router.post('/articles', function (req, res) {
   if ( req.body.pl && req.body.pl != 'all' ) query = query + '&pl=' + req.body.pl;
   if ( req.body.page ) query = query + '&page=' + req.body.page;
   if ( req.body.ancillary ) query = query + '&ancillary=' + req.body.ancillary;
-  
+  console.log(query)
   axios.get(`/articles${query}`)
     .then( function (response) {
       const obj = response.data;

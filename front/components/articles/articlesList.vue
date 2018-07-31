@@ -2,14 +2,15 @@
   <div class="container clearfix">
     <main id="maincontent" class="clearfix">
       <stagedFilter
-                            model="articles"
-                            container="maincontent"
-                            :competitions="filterData.co"
-                            :clubs="filterData.club"
-                            :players="filterData.pl"
-                            :selected="filterData.picked"
-                            :defaults="filterData.defaults"
-                            @filterArticles="filterArticles">>
+        model="articles"
+        container="maincontent"
+        :competitions="filterData.co"
+        :clubs="filterData.club"
+        :players="filterData.pl"
+        :selected="filterData.picked"
+        :defaults="filterData.defaults"
+        @filterArticles="filterArticles"
+      >
       </stagedFilter>
       <articlePreview 
         v-for="article in articles" 
@@ -23,13 +24,15 @@
         >
       </articlePreview>
 
-      <pagination container="maincontent"
-              type="default"
-              loadBtnValue="Загрузить еще"
-              loadingText="Грузим статьи"
-              fetchErrMsg="Не удается получить данные"
-              model="articles"
-              @addArticles="addArticles">
+      <pagination 
+        container="maincontent"
+        type="default"
+        loadBtnValue="Загрузить еще"
+        loadingText="Грузим статьи"
+        fetchErrMsg="Не удается получить данные"
+        model="articles"
+        @addArticles="addArticles"
+      >
       </pagination>
     </main>
   </div>
